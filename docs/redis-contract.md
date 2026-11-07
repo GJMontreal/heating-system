@@ -10,6 +10,8 @@ Every key starts with a sensor path such as `/home/sensors/kitchen`. Three setti
 - `sensor_path` of the zone in `boiler-relay/config/system_config.json`.
 - `path` of the device in the `hb-heating-plugin` platform config.
 
+The status keys in the second table do not start with a sensor path. They start with `boiler_relay/<mode>/`.
+
 ## Keys
 
 `SET+PUB` means the writer calls `SET` and then `PUBLISH` on the same key with the same payload. A `PUB` subscriber sees changes. A `GET` reader sees the last value.
@@ -27,6 +29,18 @@ Every key starts with a sensor path such as `/home/sensors/kitchen`. Three setti
 | `heating_cooling_state` | integer, 0 or 1 | `boiler-relay` | SET+PUB | plugin PUB, plugin GET at startup |
 
 `time` is UTC ISO 8601 to the second with a `Z` suffix. `boiler-relay` treats a `current_temperature` whose `time` has not changed for two hours as no heat. `boiler-relay` treats any `target_heatingcooling_state` other than 1 as off.
+
+## Status keys
+
+`<mode>` is `active` for the running service or `shadow` for `python -m boiler_relay --shadow`. A shadow run writes only under `boiler_relay/shadow/`. Every payload is JSON with a `time` field. Delivery is SET only.
+
+| Key | Payload | Writer | Readers |
+| --- | --- | --- | --- |
+| `boiler_relay/<mode>/zones/<zone name>` | `{"control_value", "state", "time"}`, `state` is 0, 1 or null | the zone thread | `boiler-relay` API |
+| `boiler_relay/<mode>/boiler` | `{"call", "time"}`, `call` is 0 or 1 | the boiler thread | none |
+| `boiler_relay/<mode>/heartbeat` | `{"time"}` | the boiler thread, once per poll | none |
+
+`<zone name>` is the zone `name` in `system_config.json`, not the sensor path. `state` is null until the zone has a target state. In shadow mode `call` comes from the zones' decided states, not from the end-switch pins.
 
 ## Rules
 
