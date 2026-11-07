@@ -42,6 +42,14 @@ The status keys in the second table do not start with a sensor path. They start 
 
 `<zone name>` is the zone `name` in `system_config.json`, not the sensor path. `state` is null until the zone has a target state. In shadow mode `call` comes from the zones' decided states, not from the end-switch pins. The boiler key sits under `hydronic` because the electric system has no boiler.
 
+## Version keys
+
+Each service writes its version once at startup. Delivery is SET only. Every key is `heating/versions/<service name>`, and the payload is `{"version", "commit", "time"}`. `time` is the start time. `commit` is the short git hash of the deployed source, with `-dirty` appended for uncommitted changes, or `unknown`. A service that starts while redis is down runs without its key until the next restart.
+
+| Key | Writer | Readers |
+| --- | --- | --- |
+| `heating/versions/boiler-relay` | `boiler-relay`, in active and shadow mode | none |
+
 ## Rules
 
 - Do not rename a key or change a payload field without changing every reader in the table.
