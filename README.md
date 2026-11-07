@@ -43,6 +43,7 @@ flowchart LR
     bridge -.->|version| redis
     relay -.->|version| redis
     web -.->|version| redis
+    hb -.->|version| redis
 ```
 
 The keys, payloads and who writes and reads each are in [docs/redis-contract.md](docs/redis-contract.md).

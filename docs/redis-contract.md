@@ -44,13 +44,14 @@ The status keys in the second table do not start with a sensor path. They start 
 
 ## Version keys
 
-Each service writes its version once at startup. Delivery is SET only. Every key is `heating/versions/<service name>`, and the payload is `{"version", "commit", "time"}`. `time` is the start time. `commit` is the short git hash of the deployed source, with `-dirty` appended for uncommitted changes, or `unknown`. A service that starts while redis is down runs without its key until the next restart.
+Each service writes its version once at startup. Delivery is SET only. Every key is `heating/versions/<service name>`, and the payload is `{"version", "commit", "time"}`. `time` is the start time. `commit` is the short git hash of the deployed source, with `-dirty` appended for uncommitted changes, or `unknown`. A service that starts while redis is down runs without its key until the next restart. The plugin has no deploy step yet, so its `commit` is always `unknown`.
 
 | Key | Writer | Readers |
 | --- | --- | --- |
 | `heating/versions/boiler-relay` | `boiler-relay`, in active and shadow mode | `heating-web` |
 | `heating/versions/mqtt-bridge` | `mqtt-bridge`, after its redis ping succeeds | `heating-web` |
 | `heating/versions/heating-web` | `heating-web`, once at startup | `heating-web` |
+| `heating/versions/hb-heating-plugin` | `hb-heating-plugin`, once when Homebridge finishes launching | `heating-web` |
 
 ## Rules
 
