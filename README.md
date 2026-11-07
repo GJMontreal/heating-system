@@ -59,4 +59,6 @@ git commit -m "Update submodules"
 
 The script runs the `deploy.sh` of each part you name, so a part without one cannot be deployed. A part that fails does not stop the others, and the script exits non-zero if any failed.
 
+The script creates the `heating` user on the device first. Each part installs as a separate `_v2` service beside the legacy one and never touches the legacy directory. A deploy copies files and builds the virtualenv. It does not install or start the units. Each part prints the commands to install them, and its `deploy/switch.sh` moves between the legacy and v2 services.
+
 Each submodule has its own README with setup, running and deploy steps.
