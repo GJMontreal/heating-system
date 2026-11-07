@@ -177,6 +177,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .log .lvl-ERROR { color: var(--critical); font-weight: 600; }
 .section-title { margin: 32px 0 12px; display: flex; flex-direction: column; gap: 2px; }
 .section-title h2 { font-size: 16px; color: var(--ink); margin: 0; }
+footer { max-width: 1200px; margin: 0 auto; padding: 16px 24px 32px; border-top: 1px solid var(--border); }
+footer .versions { display: flex; flex-wrap: wrap; gap: 8px 32px; font-size: 12px; color: var(--ink-2); }
+footer .versions span { display: inline-flex; gap: 6px; align-items: baseline; }
+footer .versions b { color: var(--ink); font-weight: 600; }
+footer .versions .commit { color: var(--ink-3); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .view[hidden] { display: none; }
 </style>
 </head>
@@ -199,6 +204,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   <section class="view" id="view-logs" hidden></section>
   <section class="view" id="view-compare" hidden></section>
 </main>
+<footer><div class="versions" id="versions"></div></footer>
 <script>
 const NOW = Date.now();
 const STEP = 10 * 60 * 1000;
@@ -314,6 +320,17 @@ function zoneCard(z) {
       ${extra}
     </dl>
   </div>`;
+}
+
+const VERSIONS = [
+  { service: "boiler-relay", version: "0.1.0", commit: "2b551fe", started: 51 * 3600000 },
+  { service: "mqtt-bridge", version: "0.1.0", commit: "a1cfe54", started: 51 * 3600000 },
+  { service: "heating-web", version: "0.1.0", commit: "59af181", started: 3 * 3600000 },
+  { service: "hb-heating-plugin", version: "1.1.0", commit: "unknown", started: 27 * 3600000 },
+];
+
+function renderVersions() {
+  document.getElementById("versions").innerHTML = VERSIONS.map((v) => `<span title="started ${ago(v.started)}">${v.service} <b>${v.version}</b><i class="commit" style="font-style:normal">${v.commit}</i></span>`).join("");
 }
 
 function renderLive() {
@@ -768,6 +785,7 @@ if (matchMedia("(prefers-color-scheme: dark)").matches) {
   document.documentElement.dataset.theme = "dark";
   document.getElementById("theme").textContent = "Light";
 }
+renderVersions();
 show(Object.keys(renderers).includes(location.hash.slice(1)) ? location.hash.slice(1) : "live");
 </script>
 </body>
