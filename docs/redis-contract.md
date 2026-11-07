@@ -49,6 +49,7 @@ Each service writes its version once at startup. Delivery is SET only. Every key
 | Key | Writer | Readers |
 | --- | --- | --- |
 | `heating/versions/boiler-relay` | `boiler-relay`, in active and shadow mode | none |
+| `heating/versions/mqtt-bridge` | `mqtt-bridge`, after its redis ping succeeds | none |
 
 ## Rules
 
