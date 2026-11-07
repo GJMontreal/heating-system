@@ -211,9 +211,9 @@ const STEP = 10 * 60 * 1000;
 const POINTS = 1008;
 const ZONES = [
   { name: "Bedrooms", system: "hydronic", path: "/home/sensors/bedroom", slot: 1, day: 19, night: 16.5, outputs: [{ pin: "P8_10", end: "P8_9" }, { pin: "P8_14", end: "P8_17" }], battery: 86 },
-  { name: "Common", system: "hydronic", path: "/home/sensors/living_room", slot: 2, day: 20.5, night: 17, outputs: [{ pin: "P8_8", end: "P8_7" }], battery: 74 },
+  { name: "Common", system: "hydronic", path: "/home/sensors/living_room", slot: 2, day: 20.5, night: 17, outputs: [{ pin: "P8_8", end: "P8_15" }], battery: 74 },
   { name: "Study", system: "hydronic", path: "/home/sensors/front_room", slot: 3, day: 19.5, night: 17, outputs: [{ pin: "P8_12", end: "P8_11" }], battery: 91 },
-  { name: "Kitchen", system: "hydronic", path: "/home/sensors/kitchen", slot: 4, day: 20.5, night: 17, outputs: [{ pin: "P8_16", end: "P8_15" }], travelling: true, battery: 68 },
+  { name: "Kitchen", system: "hydronic", path: "/home/sensors/kitchen", slot: 4, day: 20.5, night: 17, outputs: [{ pin: "P8_16", end: "P8_7" }], travelling: true, battery: 68 },
   { name: "BackRoom", system: "hydronic", path: "/home/sensors/back_room", slot: 5, day: 19, night: 16.5, outputs: [{ pin: "P8_28", end: "P8_27" }], battery: 4, staleDays: 13 },
   { name: "Stairwell", system: "electric", path: "/home/sensors/stairwell", slot: 6, day: null, night: null, outputs: [{ mqtt: "0xB5EA" }], battery: 79 },
 ];
