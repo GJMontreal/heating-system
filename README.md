@@ -30,6 +30,8 @@ flowchart LR
     relays -->|end switches| relay
 ```
 
+The keys, payloads and who writes and reads each are in [docs/redis-contract.md](docs/redis-contract.md).
+
 `boiler-relay` and `mqtt-bridge` track `more_better_modular`. `hb-heating-plugin` tracks `develop`.
 
 ## Clone
