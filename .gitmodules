@@ -6,3 +6,7 @@
 	path = mqtt-bridge
 	url = git@github.com:GJMontreal/mqtt-bridge.git
 	branch = more_better_modular
+[submodule "heating"]
+	path = heating
+	url = git@github.com:GJMontreal/heating.git
+	branch = develop

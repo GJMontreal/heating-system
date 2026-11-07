@@ -8,10 +8,11 @@ Control software for a zone-valve hydronic heating system. A BeagleBone runs it 
 | --- | --- |
 | `boiler-relay` | Runs a PID loop per zone and drives the GPIO and MQTT relay outputs. |
 | `mqtt-bridge` | Copies sensor readings from the MQTT broker into redis. |
+| `heating` | Homebridge plugin. The UI for setpoints, modes and boost. |
 
-The UI is a separate [Homebridge plugin](https://github.com/GJMontreal/heating). Redis connects all of them. Sensors publish to mosquitto, `mqtt-bridge` writes the readings to redis, Homebridge writes setpoints, and `boiler-relay` reads both and switches the relays.
+Redis connects all of them. Sensors publish to mosquitto, `mqtt-bridge` writes the readings to redis, Homebridge writes setpoints, and `boiler-relay` reads both and switches the relays.
 
-Both submodules track their `more_better_modular` branch.
+`boiler-relay` and `mqtt-bridge` track `more_better_modular`. `heating` tracks `develop`.
 
 ## Clone
 
@@ -25,7 +26,7 @@ In an existing clone, run `git submodule update --init`.
 
 ```
 git submodule update --remote
-git add boiler-relay mqtt-bridge
+git add boiler-relay mqtt-bridge heating
 git commit -m "Update submodules"
 ```
 
