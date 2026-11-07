@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heating</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-3: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --good-text: #006300;
+  --good: #0ca30c;
+  --warning: #fab219;
+  --critical: #d03b3b;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --s4: #eda100;
+  --s5: #e87ba4;
+  --s6: #008300;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --ink-3: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+  --good-text: #0ca30c;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --s4: #c98500;
+  --s5: #d55181;
+  --s6: #008300;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+nav { display: flex; gap: 4px; }
+nav button, .chip, .ghost {
+  font: inherit;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+nav button:hover, .chip:hover, .ghost:hover { background: var(--grid); }
+nav button[aria-current="page"], .chip[aria-pressed="true"] {
+  color: var(--ink);
+  background: var(--grid);
+  font-weight: 600;
+}
+.spacer { flex: 1; }
+.banner {
+  font-size: 12px;
+  color: var(--ink-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+h2 { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 0 0 12px; letter-spacing: 0.02em; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.grid { display: grid; gap: 16px; }
+.cols-3 { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+.cols-2 { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+.row { display: flex; align-items: center; gap: 8px; }
+.row.between { justify-content: space-between; }
+.muted { color: var(--ink-3); }
+.sec { color: var(--ink-2); }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex: none; }
+.status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.status.good .glyph { color: var(--good); }
+.status.warn .glyph { color: var(--warning); }
+.status.crit .glyph { color: var(--critical); }
+.glyph { font-size: 14px; line-height: 1; }
+.hero { font-size: 48px; font-weight: 600; line-height: 1.05; }
+.big { font-size: 32px; font-weight: 600; line-height: 1.1; }
+.unit { font-size: 16px; font-weight: 400; color: var(--ink-2); margin-left: 2px; }
+.stats { display: flex; gap: 32px; flex-wrap: wrap; }
+.stat .label { font-size: 12px; color: var(--ink-2); }
+.stat .value { font-size: 20px; font-weight: 600; }
+.zone .head { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+.zone .name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.meter { height: 8px; border-radius: 4px; background: var(--grid); overflow: hidden; margin-top: 4px; }
+.meter > i { display: block; height: 100%; background: var(--s1); border-radius: 4px; }
+.window { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; margin-top: 4px; }
+.window i { height: 10px; background: var(--grid); border-radius: 2px; }
+.window i.on { background: var(--s1); }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin-top: 12px; font-size: 13px; }
+.kv dt { color: var(--ink-2); }
+.kv dd { margin: 0; text-align: right; }
+.small-label { font-size: 12px; color: var(--ink-2); margin-top: 12px; }
+.switches { display: flex; gap: 8px; flex-wrap: wrap; }
+.switch { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.toolbar .label { color: var(--ink-2); font-size: 12px; margin-right: 4px; }
+.sep { width: 1px; height: 20px; background: var(--border); margin: 0 8px; }
+svg text { font-family: inherit; fill: var(--ink-3); font-size: 11px; }
+svg .grid-line { stroke: var(--grid); stroke-width: 1; }
+svg .axis-line { stroke: var(--axis); stroke-width: 1; }
+.chart { position: relative; }
+.chart svg { width: 100%; height: auto; display: block; }
+.tip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  display: none;
+  z-index: 5;
+}
+.tip .t { color: var(--ink-2); margin-bottom: 4px; }
+.tip .r { display: flex; align-items: center; gap: 6px; }
+.tip .r b { margin-left: auto; padding-left: 16px; font-weight: 600; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); margin-bottom: 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  color: var(--ink-2);
+  border: 1px dashed var(--axis);
+  border-radius: 8px;
+  text-align: center;
+  padding: 16px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--grid); }
+th { color: var(--ink-2); font-weight: 600; font-size: 12px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.spark-card { cursor: pointer; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; background: var(--surface); text-align: left; font: inherit; color: inherit; }
+.spark-card[aria-pressed="true"] { border-color: var(--ink-3); }
+.spark-card:hover { background: var(--grid); }
+.spark-card .row { margin-bottom: 4px; }
+.log { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.log .line { display: grid; grid-template-columns: 70px 140px 64px 1fr; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--grid); }
+.log .lvl-WARN { color: var(--ink); font-weight: 600; }
+.log .lvl-ERROR { color: var(--critical); font-weight: 600; }
+.section-title { margin: 32px 0 12px; display: flex; flex-direction: column; gap: 2px; }
+.section-title h2 { font-size: 16px; color: var(--ink); margin: 0; }
+.view[hidden] { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Heating</h1>
+  <nav id="nav">
+    <button data-view="live" aria-current="page">Live</button>
+    <button data-view="trends">Trends</button>
+    <button data-view="logs">Logs</button>
+    <button data-view="compare">Compare</button>
+  </nav>
+  <span class="spacer"></span>
+  <span class="banner">Mockup with fake data</span>
+  <button class="ghost" id="theme">Dark</button>
+</header>
+<main>
+  <section class="view" id="view-live"></section>
+  <section class="view" id="view-trends" hidden></section>
+  <section class="view" id="view-logs" hidden></section>
+  <section class="view" id="view-compare" hidden></section>
+</main>
+<script>
+const NOW = Date.now();
+const STEP = 10 * 60 * 1000;
+const POINTS = 1008;
+const ZONES = [
+  { name: "Bedrooms", system: "hydronic", path: "/home/sensors/bedroom", slot: 1, day: 19, night: 16.5, outputs: [{ pin: "P8_10", end: "P8_9" }, { pin: "P8_14", end: "P8_17" }], battery: 86 },
+  { name: "Common", system: "hydronic", path: "/home/sensors/living_room", slot: 2, day: 20.5, night: 17, outputs: [{ pin: "P8_8", end: "P8_7" }], battery: 74 },
+  { name: "Study", system: "hydronic", path: "/home/sensors/front_room", slot: 3, day: 19.5, night: 17, outputs: [{ pin: "P8_12", end: "P8_11" }], battery: 91 },
+  { name: "Kitchen", system: "hydronic", path: "/home/sensors/kitchen", slot: 4, day: 20.5, night: 17, outputs: [{ pin: "P8_16", end: "P8_15" }], travelling: true, battery: 68 },
+  { name: "BackRoom", system: "hydronic", path: "/home/sensors/back_room", slot: 5, day: 19, night: 16.5, outputs: [{ pin: "P8_28", end: "P8_27" }], battery: 4, staleDays: 13 },
+  { name: "Stairwell", system: "electric", path: "/home/sensors/stairwell", slot: 6, day: null, night: null, outputs: [{ mqtt: "0xB5EA" }], battery: 79 },
+];
+
+function rng(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function targetAt(zone, time) {
+  if (zone.day === null) return null;
+  const h = new Date(time).getHours();
+  return h >= 22 || h < 6 ? zone.night : zone.day;
+}
+
+function simulate(zone, index) {
+  const rand = rng(index * 977 + 13);
+  const times = [], temps = [], targets = [], control = [];
+  let temp = 18;
+  const warmup = 200;
+  for (let i = -warmup; i < POINTS; i++) {
+    const time = NOW - (POINTS - 1 - i) * STEP;
+    const outdoor = 6 + 4 * Math.sin((time / 3600000 - 9) / 24 * 2 * Math.PI);
+    const target = targetAt(zone, time);
+    let c = 0;
+    if (target !== null) c = Math.max(0, Math.min(1, (target - temp) * 0.9 + 0.12));
+    temp += c * 0.32 - (temp - outdoor) * 0.018 + (rand() - 0.5) * 0.06;
+    if (zone.day === null) temp += (15.5 - temp) * 0.08;
+    if (i >= 0) {
+      if (!zone.staleDays || time <= NOW - zone.staleDays * 86400000) {
+        times.push(time); temps.push(temp); targets.push(target); control.push(c);
+      }
+    }
+  }
+  return { times, temps, targets, control };
+}
+
+ZONES.forEach((z, i) => { z.data = simulate(z, i); });
+
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function color(zone) { return `var(--s${zone.slot})`; }
+function fmtTemp(v) { return v === null || v === undefined ? "–" : v.toFixed(1); }
+function fmtTime(t) { return new Date(t).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" }); }
+function ago(ms) {
+  const s = Math.round(ms / 1000);
+  if (s < 90) return `${s} s ago`;
+  if (s < 5400) return `${Math.round(s / 60)} min ago`;
+  if (s < 172800) return `${Math.round(s / 3600)} h ago`;
+  return `${Math.round(s / 86400)} days ago`;
+}
+function last(arr) { return arr[arr.length - 1]; }
+
+function zoneState(z) {
+  if (z.staleDays) return { cls: "warn", glyph: "⚠", label: "No heat: reading is stale" };
+  if (z.day === null) return { cls: "", glyph: "○", label: "Idle: no target set" };
+  const c = last(z.data.control);
+  if (z.boost) return { cls: "good", glyph: "▲", label: "Boost" };
+  if (c > 0.05) return { cls: "good", glyph: "●", label: "Heating" };
+  return { cls: "", glyph: "○", label: "Idle" };
+}
+
+const AGES = [23, 41, 9, 57, 0, 38];
+
+function zoneCard(z) {
+  const d = z.data;
+  const stale = !!z.staleDays;
+  const electric = z.system === "electric";
+  const temp = stale ? null : last(d.temps);
+  const target = stale ? targetAt(z, NOW) : last(d.targets);
+  const c = stale || z.day === null ? 0 : last(d.control);
+  const st = zoneState(z);
+  const on = Math.round(c * 10);
+  const win = Array.from({ length: 10 }, (_, i) => `<i class="${i < on ? "on" : ""}"></i>`).join("");
+  const age = stale ? `${z.staleDays} days ago` : ago(AGES[ZONES.indexOf(z)] * 1000);
+  const part = electric ? "Relay on" : "Valve open";
+  const extra = electric
+    ? `<dt>Relay state</dt><dd><span class="status warn"><span class="glyph">?</span>Not confirmed</span></dd><dt>Last command</dt><dd>${c > 0.05 ? "On" : "Off"}, ${ago(AGES[ZONES.indexOf(z)] * 1000)}</dd>`
+    : "";
+  return `
+  <div class="card zone">
+    <div class="head">
+      <div>
+        <div class="name"><span class="dot" style="background:${color(z)}"></span>${z.name}</div>
+        <div class="muted" style="font-size:12px">${z.path}</div>
+      </div>
+      <span class="status ${st.cls}"><span class="glyph">${st.glyph}</span>${st.label}</span>
+    </div>
+    <div class="row" style="align-items:baseline;gap:24px">
+      <div class="big">${fmtTemp(temp)}<span class="unit">°C</span></div>
+      <div class="sec">Target ${target === null ? "not set" : fmtTemp(target) + " °C"}</div>
+    </div>
+    <div class="small-label">Control value ${c.toFixed(2)}</div>
+    <div class="meter"><i style="width:${c * 100}%"></i></div>
+    <div class="small-label">${part} ${on} of 10 minutes this window</div>
+    <div class="window">${win}</div>
+    <dl class="kv">
+      <dt>Last reading</dt><dd>${age}</dd>
+      <dt>Battery</dt><dd>${z.battery}%${z.battery < 10 ? " ⚠ low" : ""}</dd>
+      <dt>Output</dt><dd>${z.outputs.map((o) => o.pin || "MQTT " + o.mqtt).join(" / ")}</dd>
+      ${extra}
+    </dl>
+  </div>`;
+}
+
+function renderLive() {
+  const hydronic = ZONES.filter((z) => z.system === "hydronic");
+  const electric = ZONES.filter((z) => z.system === "electric");
+  const rows = [];
+  hydronic.forEach((z) => {
+    const commanded = !z.staleDays && z.day !== null && last(z.data.control) > 0.05;
+    z.outputs.forEach((o) => {
+      rows.push({ zone: z, out: o, commanded, high: !!o.end && commanded && !z.travelling });
+    });
+  });
+  const boilerOn = rows.some((r) => r.high);
+  const highCount = rows.filter((r) => r.high).length;
+  const cmd = (on) => `<span class="status ${on ? "good" : ""}"><span class="glyph">${on ? "●" : "○"}</span>${on ? "Open" : "Closed"}</span>`;
+  const ioRows = rows.map((r) => {
+    const z = r.zone;
+    const reading = r.high
+      ? `<span class="status good"><span class="glyph">●</span>High, valve open</span>`
+      : r.commanded
+        ? `<span class="status warn"><span class="glyph">⚠</span>Low, valve still opening</span>`
+        : `<span class="status"><span class="glyph">○</span>Low, valve closed</span>`;
+    return `<tr><td><span class="dot" style="background:${color(z)};margin-right:8px"></span>${z.name}</td><td>${r.out.pin}</td><td>${cmd(r.commanded)}</td><td>${r.out.end}</td><td>${reading}</td></tr>`;
+  }).join("");
+  const boilerRow = `<tr><td><b>Boiler</b></td><td>P8_18</td><td><span class="status ${boilerOn ? "good" : ""}"><span class="glyph">${boilerOn ? "●" : "○"}</span>${boilerOn ? "On" : "Off"}</span></td><td>any end switch</td><td>${boilerOn ? `<span class="status good"><span class="glyph">●</span>${highCount} high</span>` : `<span class="status"><span class="glyph">○</span>All low</span>`}</td></tr>`;
+  document.getElementById("view-live").innerHTML = `
+    <div class="card" style="margin-bottom:8px">
+      <div class="row between" style="flex-wrap:wrap;gap:16px">
+        <div class="stats">
+          <div class="stat"><div class="label">boiler_relay_v2</div><div class="value"><span class="status good"><span class="glyph">●</span>Running</span></div></div>
+          <div class="stat"><div class="label">mqtt_bridge_v2</div><div class="value"><span class="status good"><span class="glyph">●</span>Running</span></div></div>
+          <div class="stat"><div class="label">Sensors reporting</div><div class="value">5 of 6</div></div>
+        </div>
+        <span class="status warn"><span class="glyph">⚠</span>BackRoom has not reported for ${ZONES[4].staleDays} days. Its zone calls for no heat.</span>
+      </div>
+    </div>
+    <div class="section-title"><h2>Hydronic system</h2><span class="muted">Boiler, pump and zone valves on the BeagleBone GPIO. Each valve reports back through an end switch.</span></div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="row" style="gap:24px;align-items:flex-end;margin-bottom:16px">
+        <div class="hero">${boilerOn ? "On" : "Off"}</div>
+        <span class="status ${boilerOn ? "good" : ""}"><span class="glyph">${boilerOn ? "●" : "○"}</span>${boilerOn ? `Boiler follows ${highCount} end switch${highCount > 1 ? "es" : ""} high` : "No end switch is high"}</span>
+      </div>
+      <table>
+        <thead><tr><th>Zone</th><th>Output pin</th><th>Command</th><th>Input pin</th><th>End switch</th></tr></thead>
+        <tbody>${boilerRow}${ioRows}</tbody>
+      </table>
+    </div>
+    <div class="grid cols-3">${hydronic.map(zoneCard).join("")}</div>
+    <div class="section-title"><h2>Electric system</h2><span class="muted">Radiators on Zigbee relays, switched over MQTT. No boiler, no valve and no end switch, so the relay state is never confirmed.</span></div>
+    <div class="grid cols-3">${electric.map(zoneCard).join("")}</div>`;
+}
+
+function niceTicks(min, max, count) {
+  const span = max - min;
+  const raw = span / count;
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 5, 10].map((m) => m * pow).find((s) => s >= raw);
+  const ticks = [];
+  for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) ticks.push(+v.toFixed(6));
+  return ticks;
+}
+
+function attachTip(box, svg, model) {
+  const tip = box.querySelector(".tip");
+  const overlay = svg.querySelector(".overlay");
+  const cross = svg.querySelector(".cross");
+  const dots = svg.querySelectorAll(".hover-dot");
+  overlay.addEventListener("mouseleave", () => {
+    tip.style.display = "none";
+    cross.style.display = "none";
+    dots.forEach((d) => (d.style.display = "none"));
+  });
+  overlay.addEventListener("mousemove", (e) => {
+    const rect = svg.getBoundingClientRect();
+    const scale = model.width / rect.width;
+    const x = (e.clientX - rect.left) * scale;
+    const frac = Math.max(0, Math.min(1, (x - model.left) / (model.width - model.left - model.right)));
+    const i = Math.round(frac * (model.n - 1));
+    const px = model.left + (i / (model.n - 1)) * (model.width - model.left - model.right);
+    cross.setAttribute("x1", px);
+    cross.setAttribute("x2", px);
+    cross.style.display = "block";
+    dots.forEach((d, k) => {
+      const v = model.series[k].values[i];
+      if (v === null || v === undefined) { d.style.display = "none"; return; }
+      d.setAttribute("cx", px);
+      d.setAttribute("cy", model.y(v));
+      d.style.display = "block";
+    });
+    const rows = model.series.map((s) => `<div class="r"><span class="sw" style="background:${s.color}"></span>${s.name}<b>${s.fmt(s.values[i])}</b></div>`).join("");
+    tip.innerHTML = `<div class="t">${fmtTime(model.times[i])}</div>${rows}`;
+    tip.style.display = "block";
+    const boxRect = box.getBoundingClientRect();
+    let left = e.clientX - boxRect.left + 14;
+    if (left + tip.offsetWidth > boxRect.width) left = e.clientX - boxRect.left - tip.offsetWidth - 14;
+    tip.style.left = left + "px";
+    tip.style.top = Math.max(0, e.clientY - boxRect.top - 20) + "px";
+  });
+}
+
+function lineChart(box, opts) {
+  const width = 600, height = opts.height || 240, left = 40, right = 16, top = 12, bottom = 28;
+  const { times, series, yMin, yMax, area } = opts;
+  const n = times.length;
+  const x = (i) => left + (i / (n - 1)) * (width - left - right);
+  const y = (v) => top + (1 - (v - yMin) / (yMax - yMin)) * (height - top - bottom);
+  const ticks = niceTicks(yMin, yMax, 5);
+  const grid = ticks.map((t) => `<line class="grid-line" x1="${left}" x2="${width - right}" y1="${y(t)}" y2="${y(t)}"/><text x="${left - 8}" y="${y(t) + 4}" text-anchor="end">${opts.tickFmt ? opts.tickFmt(t) : t}</text>`).join("");
+  const span = times[n - 1] - times[0];
+  const every = span > 3 * 86400000 ? 86400000 : span > 12 * 3600000 ? 4 * 3600000 : 3600000;
+  let xt = "";
+  for (let t = Math.ceil(times[0] / every) * every; t <= times[n - 1]; t += every) {
+    const i = Math.round((t - times[0]) / STEP);
+    const d = new Date(t);
+    const label = every === 86400000 ? d.toLocaleDateString([], { weekday: "short" }) : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    xt += `<text x="${x(i)}" y="${height - 8}" text-anchor="middle">${label}</text>`;
+  }
+  const paths = series.map((s) => {
+    const pts = s.values.map((v, i) => (v === null ? null : [x(i), y(v)]));
+    let d = "";
+    if (s.step) {
+      pts.forEach((p, i) => { if (p) d += (d ? ` H${p[0]} V${p[1]}` : `M${p[0]} ${p[1]}`); });
+    } else {
+      pts.forEach((p, i) => { if (p) d += `${d ? "L" : "M"}${p[0]} ${p[1]}`; });
+    }
+    let fill = "";
+    if (area && s.area) fill = `<path d="${d} L${x(n - 1)} ${y(yMin)} L${x(0)} ${y(yMin)} Z" fill="${s.color}" opacity="0.10"/>`;
+    return `${fill}<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }).join("");
+  const dots = series.map((s) => `<circle class="hover-dot" r="4" fill="${s.color}" stroke="var(--surface)" stroke-width="2" style="display:none"/>`).join("");
+  const lastIdx = n - 1;
+  const endDots = series.filter((s) => s.endDot && s.values[lastIdx] !== null).map((s) => `<circle cx="${x(lastIdx)}" cy="${y(s.values[lastIdx])}" r="4" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`).join("");
+  box.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${opts.label}">
+    ${grid}<line class="axis-line" x1="${left}" x2="${width - right}" y1="${y(yMin)}" y2="${y(yMin)}"/>
+    ${xt}${paths}${endDots}
+    <line class="cross" y1="${top}" y2="${height - bottom}" stroke="var(--axis)" stroke-width="1" style="display:none"/>
+    ${dots}
+    <rect class="overlay" x="${left}" y="${top}" width="${width - left - right}" height="${height - top - bottom}" fill="transparent"/>
+  </svg><div class="tip"></div>`;
+  attachTip(box, box.querySelector("svg"), { width, left, right, n, y, times, series });
+}
+
+function sparkline(z, count) {
+  const d = z.data;
+  const values = d.temps.slice(-count);
+  if (!values.length || z.staleDays) return `<div class="muted" style="font-size:12px;height:36px;display:flex;align-items:center">No readings in range</div>`;
+  const w = 160, h = 36;
+  const min = Math.min(...values), max = Math.max(...values);
+  const pts = values.map((v, i) => `${(i / (values.length - 1)) * (w - 8) + 2},${h - 6 - ((v - min) / (max - min || 1)) * (h - 12)}`);
+  const end = pts[pts.length - 1].split(",");
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:36px"><polyline points="${pts.join(" ")}" fill="none" stroke="${color(z)}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${end[0]}" cy="${end[1]}" r="4" fill="${color(z)}" stroke="var(--surface)" stroke-width="2"/></svg>`;
+}
+
+const trends = { zone: 0, range: 144, table: false };
+const RANGES = [["6 hours", 36], ["24 hours", 144], ["7 days", 1008]];
+
+function renderTrends() {
+  const z = ZONES[trends.zone];
+  const spark = ZONES.map((zz, i) => `
+    <button class="spark-card" data-zone="${i}" aria-pressed="${i === trends.zone}">
+      <div class="row"><span class="dot" style="background:${color(zz)}"></span><b>${zz.name}</b><span class="spacer"></span><span class="sec">${zz.staleDays ? "–" : fmtTemp(last(zz.data.temps)) + " °C"}</span></div>
+      ${sparkline(zz, trends.range)}
+    </button>`).join("");
+  const ranges = RANGES.map(([label, n]) => `<button class="chip" data-range="${n}" aria-pressed="${n === trends.range}">${label}</button>`).join("");
+  document.getElementById("view-trends").innerHTML = `
+    <div class="toolbar">
+      <span class="label">Range</span>${ranges}
+      <span class="sep"></span>
+      <button class="chip" id="table-toggle" aria-pressed="${trends.table}">Table view</button>
+    </div>
+    <div class="grid cols-3" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-bottom:16px">${spark}</div>
+    <div class="grid cols-2">
+      <div class="card">
+        <h2>${z.name} temperature</h2>
+        <div class="legend"><span><i class="sw" style="background:${color(z)}"></i>Temperature</span><span><i class="sw" style="background:var(--ink-3)"></i>Target</span></div>
+        <div class="chart" id="temp-chart"></div>
+      </div>
+      <div class="card">
+        <h2>${z.name} control value</h2>
+        <div class="legend"><span><i class="sw" style="background:${color(z)}"></i>Control value, 0 off to 1 fully open</span></div>
+        <div class="chart" id="ctl-chart"></div>
+      </div>
+    </div>`;
+  const d = z.data;
+  const n = Math.min(trends.range, d.times.length);
+  if (!n || z.staleDays) {
+    const msg = `<div class="empty">No readings in this range.<br>${z.name} last reported ${z.staleDays} days ago.</div>`;
+    document.getElementById("temp-chart").innerHTML = msg;
+    document.getElementById("ctl-chart").innerHTML = msg;
+    return;
+  }
+  const times = d.times.slice(-n);
+  const temps = d.temps.slice(-n);
+  const targets = d.targets.slice(-n);
+  const ctl = d.control.slice(-n);
+  const all = temps.concat(targets.filter((v) => v !== null));
+  const yMin = Math.floor(Math.min(...all) - 0.5), yMax = Math.ceil(Math.max(...all) + 0.5);
+  if (trends.table) {
+    const rows = times.map((t, i) => ({ t, i })).filter(({ i }) => i % Math.max(1, Math.round(n / 24)) === 0).map(({ t, i }) => `<tr><td>${fmtTime(t)}</td><td class="num">${fmtTemp(temps[i])}</td><td class="num">${fmtTemp(targets[i])}</td><td class="num">${ctl[i].toFixed(2)}</td></tr>`).join("");
+    const table = `<table><thead><tr><th>Time</th><th class="num">Temperature °C</th><th class="num">Target °C</th><th class="num">Control</th></tr></thead><tbody>${rows}</tbody></table>`;
+    document.getElementById("temp-chart").innerHTML = table;
+    document.getElementById("ctl-chart").innerHTML = `<div class="empty">The table to the left lists temperature, target and control value together.</div>`;
+    return;
+  }
+  lineChart(document.getElementById("temp-chart"), {
+    label: `${z.name} temperature and target`,
+    times, yMin, yMax,
+    series: [
+      { name: "Temperature", color: color(z), values: temps, endDot: true, fmt: (v) => fmtTemp(v) + " °C" },
+      { name: "Target", color: "var(--ink-3)", values: targets, step: true, fmt: (v) => (v === null ? "not set" : fmtTemp(v) + " °C") },
+    ],
+  });
+  lineChart(document.getElementById("ctl-chart"), {
+    label: `${z.name} control value`,
+    times, yMin: 0, yMax: 1, area: true, tickFmt: (t) => t.toFixed(1),
+    series: [{ name: "Control value", color: color(z), values: ctl, area: true, endDot: true, fmt: (v) => v.toFixed(2) }],
+  });
+}
+
+const LOGS = (() => {
+  const base = [
+    ["boiler_relay_v2", "INFO", "Kitchen window closed: mean control 0.31, valve open 3.1 of 10 min"],
+    ["mqtt_bridge_v2", "INFO", "ZbReceived 0xE1AC Temperature 20.4 -> /home/sensors/kitchen/current_temperature"],
+    ["boiler_relay_v2", "INFO", "Boiler on: end switch P8_16 high"],
+    ["mqtt_bridge_v2", "INFO", "ZbReceived 0xB3F2 Humidity 51 -> /home/sensors/bedroom/current_relative_humidity"],
+    ["boiler_relay_v2", "WARNING", "BackRoom reading unchanged for 2 h, calling for no heat"],
+    ["boiler_relay_v2", "INFO", "Common window closed: mean control 0.00, valve open 0.0 of 10 min"],
+    ["mqtt_bridge_v2", "INFO", "ZbReceived 0x9A10 Temperature 17.1 -> /home/sensors/stairwell/current_temperature"],
+    ["boiler_relay_v2", "WARNING", "MQTTRelay Stairwell could not connect to esplanade.local:1883, retrying"],
+    ["boiler_relay_v2", "ERROR", "Bedrooms tick failed (1/3): redis connection refused"],
+    ["boiler_relay_v2", "INFO", "Bedrooms tick recovered"],
+    ["mqtt_bridge_v2", "INFO", "ZbInfo received, watchdog answered"],
+    ["boiler_relay_v2", "INFO", "Boiler off: all end switches low"],
+  ];
+  const out = [];
+  for (let i = 0; i < 48; i++) {
+    const [service, level, message] = base[(i * 5) % base.length];
+    out.push({ time: NOW - i * 94000, service, level, message });
+  }
+  return out;
+})();
+
+const logs = { service: "all", level: "all" };
+
+function renderLogs() {
+  const services = ["all", "boiler_relay_v2", "mqtt_bridge_v2"];
+  const levels = ["all", "WARNING", "ERROR"];
+  const rows = LOGS.filter((l) => (logs.service === "all" || l.service === logs.service) && (logs.level === "all" || l.level === logs.level))
+    .map((l) => `<div class="line"><span class="muted">${new Date(l.time).toLocaleTimeString([], { hour12: false })}</span><span class="sec">${l.service}</span><span class="lvl-${l.level}">${l.level}</span><span>${l.message}</span></div>`).join("");
+  document.getElementById("view-logs").innerHTML = `
+    <div class="toolbar">
+      <span class="label">Service</span>${services.map((s) => `<button class="chip" data-service="${s}" aria-pressed="${logs.service === s}">${s}</button>`).join("")}
+      <span class="sep"></span>
+      <span class="label">Level</span>${levels.map((s) => `<button class="chip" data-level="${s}" aria-pressed="${logs.level === s}">${s === "all" ? "all" : s.toLowerCase()}</button>`).join("")}
+    </div>
+    <div class="card log">${rows || `<div class="empty">No lines match.</div>`}</div>`;
+}
+
+const compare = { metric: "control" };
+const COMPARE = (() => {
+  const rand = rng(4242);
+  return ZONES.map((z) => {
+    const stale = !!z.staleDays || z.day === null;
+    const control = stale ? 0 : 0.18 + rand() * 0.3;
+    const fraction = stale ? 0 : Math.min(1, control * 0.9 + 0.05);
+    const gapScale = z.name === "Kitchen" ? 0.09 : 0.012;
+    const sign = rand() > 0.5 ? 1 : -1;
+    return {
+      zone: z,
+      control: [control, Math.max(0, control + sign * gapScale * (stale ? 0 : 1))],
+      fraction: [fraction, Math.max(0, Math.min(1, fraction + sign * gapScale * 0.8 * (stale ? 0 : 1)))],
+    };
+  });
+})();
+
+function renderCompare() {
+  const key = compare.metric;
+  const label = key === "control" ? "Mean control value" : "On-fraction";
+  const width = 900, height = 300, left = 44, right = 16, top = 16, bottom = 36;
+  const y = (v) => top + (1 - v / 0.6) * (height - top - bottom);
+  const band = (width - left - right) / COMPARE.length;
+  const bw = 20, gap = 2;
+  const grid = [0, 0.2, 0.4, 0.6].map((t) => `<line class="grid-line" x1="${left}" x2="${width - right}" y1="${y(t)}" y2="${y(t)}"/><text x="${left - 8}" y="${y(t) + 4}" text-anchor="end">${t.toFixed(1)}</text>`).join("");
+  const bars = COMPARE.map((c, i) => {
+    const cx = left + band * i + band / 2;
+    const mk = (v, dx, fill) => {
+      const hgt = Math.max(0, y(0) - y(v));
+      const r = Math.min(4, hgt / 2);
+      const x0 = cx + dx;
+      return hgt === 0
+        ? `<line x1="${x0}" x2="${x0 + bw}" y1="${y(0)}" y2="${y(0)}" stroke="${fill}" stroke-width="2"/>`
+        : `<path d="M${x0} ${y(0)} V${y(v) + r} Q${x0} ${y(v)} ${x0 + r} ${y(v)} H${x0 + bw - r} Q${x0 + bw} ${y(v)} ${x0 + bw} ${y(v) + r} V${y(0)} Z" fill="${fill}"/>`;
+    };
+    const v = c[key];
+    return `<g class="bar-group" data-i="${i}">
+      ${mk(v[0], -bw - gap / 2, "var(--s1)")}${mk(v[1], gap / 2, "var(--s2)")}
+      <text x="${cx}" y="${height - 12}" text-anchor="middle">${c.zone.name}</text>
+      <rect x="${cx - band / 2}" y="${top}" width="${band}" height="${height - top - bottom}" fill="transparent"/>
+    </g>`;
+  }).join("");
+  const rows = COMPARE.map((c) => {
+    const v = c[key];
+    const delta = v[1] - v[0];
+    const bad = Math.abs(delta) > 0.05;
+    return `<tr><td><span class="dot" style="background:${color(c.zone)};margin-right:8px"></span>${c.zone.name}</td>
+      <td class="num">${v[0].toFixed(2)}</td><td class="num">${v[1].toFixed(2)}</td>
+      <td class="num">${delta >= 0 ? "+" : ""}${delta.toFixed(2)}</td>
+      <td><span class="status ${bad ? "warn" : "good"}"><span class="glyph">${bad ? "⚠" : "✓"}</span>${bad ? "Diverges" : "Matches"}</span></td></tr>`;
+  }).join("");
+  const metrics = [["control", "Mean control value"], ["fraction", "On-fraction"]];
+  document.getElementById("view-compare").innerHTML = `
+    <div class="toolbar">
+      <span class="label">Metric</span>${metrics.map(([k, l]) => `<button class="chip" data-metric="${k}" aria-pressed="${compare.metric === k}">${l}</button>`).join("")}
+      <span class="sep"></span>
+      <span class="sec">Last 24 hours, 144 ten-minute windows per zone</span>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <h2>${label} per zone, legacy against shadow</h2>
+      <div class="legend"><span><i class="sw" style="background:var(--s1)"></i>Legacy</span><span><i class="sw" style="background:var(--s2)"></i>Shadow</span></div>
+      <div class="chart" id="cmp-chart"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${label} per zone, legacy against shadow">${grid}<line class="axis-line" x1="${left}" x2="${width - right}" y1="${y(0)}" y2="${y(0)}"/>${bars}</svg><div class="tip"></div></div>
+    </div>
+    <div class="card">
+      <table><thead><tr><th>Zone</th><th class="num">Legacy</th><th class="num">Shadow</th><th class="num">Difference</th><th>Verdict</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="small-label">A zone diverges when the means differ by more than 0.05. BackRoom and Stairwell are zero in both because neither calls for heat.</div>
+    </div>`;
+  const box = document.getElementById("cmp-chart");
+  const tip = box.querySelector(".tip");
+  box.querySelectorAll(".bar-group").forEach((g) => {
+    g.addEventListener("mousemove", (e) => {
+      const c = COMPARE[+g.dataset.i];
+      const v = c[key];
+      tip.innerHTML = `<div class="t">${c.zone.name}</div><div class="r"><span class="sw" style="background:var(--s1)"></span>Legacy<b>${v[0].toFixed(2)}</b></div><div class="r"><span class="sw" style="background:var(--s2)"></span>Shadow<b>${v[1].toFixed(2)}</b></div>`;
+      tip.style.display = "block";
+      const r = box.getBoundingClientRect();
+      let left = e.clientX - r.left + 14;
+      if (left + tip.offsetWidth > r.width) left = e.clientX - r.left - tip.offsetWidth - 14;
+      tip.style.left = left + "px";
+      tip.style.top = Math.max(0, e.clientY - r.top - 20) + "px";
+    });
+    g.addEventListener("mouseleave", () => (tip.style.display = "none"));
+  });
+}
+
+const renderers = { live: renderLive, trends: renderTrends, logs: renderLogs, compare: renderCompare };
+let current = "live";
+
+function show(view) {
+  current = view;
+  document.querySelectorAll(".view").forEach((v) => (v.hidden = v.id !== `view-${view}`));
+  document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-current", b.dataset.view === view ? "page" : "false"));
+  renderers[view]();
+  location.hash = view;
+}
+
+document.getElementById("nav").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (b) show(b.dataset.view);
+});
+
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button");
+  if (!t) return;
+  if (t.dataset.zone !== undefined) { trends.zone = +t.dataset.zone; renderTrends(); }
+  if (t.dataset.range) { trends.range = +t.dataset.range; renderTrends(); }
+  if (t.id === "table-toggle") { trends.table = !trends.table; renderTrends(); }
+  if (t.dataset.service) { logs.service = t.dataset.service; renderLogs(); }
+  if (t.dataset.level) { logs.level = t.dataset.level; renderLogs(); }
+  if (t.dataset.metric) { compare.metric = t.dataset.metric; renderCompare(); }
+});
+
+document.getElementById("theme").addEventListener("click", (e) => {
+  const dark = document.documentElement.dataset.theme !== "dark";
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  e.target.textContent = dark ? "Light" : "Dark";
+  renderers[current]();
+});
+
+if (matchMedia("(prefers-color-scheme: dark)").matches) {
+  document.documentElement.dataset.theme = "dark";
+  document.getElementById("theme").textContent = "Light";
+}
+show(Object.keys(renderers).includes(location.hash.slice(1)) ? location.hash.slice(1) : "live");
+</script>
+</body>
+</html>
