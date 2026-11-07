@@ -1,12 +1,17 @@
 # heating-system
 
-Control software for a zone-valve hydronic heating system. A BeagleBone runs it all and switches relays for the zone valves, the boiler and the pump.
+Control software for a house with two heating systems. A BeagleBone runs it all.
+
+- **Hydronic:** a boiler and pump feed radiators through zone valves. The BeagleBone switches them with GPIO relays. Each valve reports back through an end switch, and the boiler runs while any end switch is high.
+- **Electric:** a radiator on a Zigbee relay, switched over MQTT. It has no end switch and no other feedback, so its state is never confirmed.
+
+The same sensors, setpoints and control loop serve both. A zone belongs to one system, set by its `system` field in the `boiler-relay` config.
 
 ## Parts
 
 | Submodule | Role |
 | --- | --- |
-| `boiler-relay` | Runs a PID loop per zone and drives the GPIO and MQTT relay outputs. |
+| `boiler-relay` | Runs a PID loop per zone. Drives the hydronic GPIO outputs and the boiler, and the electric MQTT relay. Despite the name it controls both systems. |
 | `mqtt-bridge` | Copies sensor readings from the MQTT broker into redis. |
 | `hb-heating-plugin` | Homebridge plugin. The UI for setpoints, modes and boost. |
 
@@ -25,9 +30,10 @@ flowchart LR
     redis -->|current_temperature<br/>target, boost| relay[boiler-relay]
     relay -->|control_value<br/>heating_cooling_state| redis
 
-    relay -->|GPIO| relays[Relay board<br/>zone valves, boiler, pump]
-    relay -->|MQTT relay output| mqtt
+    relay -->|GPIO, hydronic| relays[Relay board<br/>zone valves, boiler, pump]
     relays -->|end switches| relay
+    relay -->|MQTT relay output, electric| mqtt
+    mqtt -->|command, no feedback| zrelay[Zigbee relay<br/>electric radiator]
 ```
 
 The keys, payloads and who writes and reads each are in [docs/redis-contract.md](docs/redis-contract.md).
