@@ -4,9 +4,9 @@ Parent repo for a zone-valve heating system. It holds three submodules and no co
 
 - `boiler-relay`: zone PID control and relay outputs. Has its own `CLAUDE.md`.
 - `mqtt-bridge`: MQTT to redis bridge. No `CLAUDE.md` yet.
-- `heating`: Homebridge plugin in TypeScript. Reads and writes the redis keys.
+- `hb-heating-plugin`: Homebridge plugin in TypeScript. Reads and writes the redis keys.
 
-`boiler-relay` and `mqtt-bridge` track `more_better_modular`. `heating` tracks `develop`. Work inside a submodule on its own branch, commit and push there, then commit the new pointer here.
+`boiler-relay` and `mqtt-bridge` track `more_better_modular`. `hb-heating-plugin` tracks `develop`. Work inside a submodule on its own branch, commit and push there, then commit the new pointer here.
 
 ## Redis contract
 
