@@ -447,6 +447,7 @@ function lineChart(box, opts) {
   const lastIdx = n - 1;
   const endDots = series.filter((s) => s.endDot && s.values[lastIdx] !== null).map((s) => `<circle cx="${x(lastIdx)}" cy="${y(s.values[lastIdx])}" r="4" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`).join("");
   box.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${opts.label}">
+    ${opts.yLabel ? `<text transform="rotate(-90)" x="${-(top + (height - top - bottom) / 2)}" y="11" text-anchor="middle">${opts.yLabel}</text>` : ""}
     ${grid}<line class="axis-line" x1="${left}" x2="${width - right}" y1="${y(yMin)}" y2="${y(yMin)}"/>
     ${xt}${paths}${endDots}
     <line class="cross" y1="${top}" y2="${height - bottom}" stroke="var(--axis)" stroke-width="1" style="display:none"/>
@@ -454,6 +455,75 @@ function lineChart(box, opts) {
     <rect class="overlay" x="${left}" y="${top}" width="${width - left - right}" height="${height - top - bottom}" fill="transparent"/>
   </svg><div class="tip"></div>`;
   attachTip(box, box.querySelector("svg"), { width, left, right, n, y, times, series });
+}
+
+function boilerSeries(n) {
+  const zones = ZONES.filter((zz) => zz.system === "hydronic" && !zz.staleDays);
+  const series = zones.map((zz) => zz.data.control.slice(-n));
+  return Array.from({ length: n }, (_, i) => Math.max(0, ...series.map((c) => c[i])));
+}
+
+function stateStrips(box, z, times, ctl) {
+  const width = 600, left = 40, right = 16, labelH = 14, barH = 12, gap = 8;
+  const n = times.length;
+  const cell = (width - left - right) / n;
+  const electric = z.system === "electric";
+  const rows = [];
+  const many = z.outputs.length > 1;
+  z.outputs.forEach((o, k) => {
+    const suffix = many ? ` ${k + 1}` : "";
+    rows.push({ label: `${z.name} ${electric ? "relay" : "valve"}${suffix}`, kind: "command", fill: "var(--s1)" });
+    if (o.end) rows.push({ label: `${z.name} end switch${suffix}`, kind: "end", fill: "var(--ink-2)" });
+  });
+  const boiler = electric ? [] : boilerSeries(n);
+  if (!electric) rows.push({ label: "Boiler", kind: "boiler", fill: "var(--s1)" });
+  const rowH = labelH + barH + gap;
+  const height = rows.length * rowH + 4;
+  const x = (i) => left + i * cell;
+  let body = "";
+  rows.forEach((r, k) => {
+    const y = k * rowH + 2;
+    const by = y + labelH;
+    body += `<text x="${left}" y="${y + 10}">${r.label}</text>`;
+    body += `<rect x="${left}" y="${by}" width="${width - left - right}" height="${barH}" rx="2" fill="var(--grid)"/>`;
+    const start = r.kind === "command" ? 0 : 0.08;
+    (r.kind === "boiler" ? boiler : ctl).forEach((c, i) => {
+      if (c <= 0.005) return;
+      const end = Math.min(1, c + start);
+      body += `<rect x="${x(i) + start * cell}" y="${by}" width="${Math.max(0.6, (end - start) * cell)}" height="${barH}" fill="${r.fill}"/>`;
+    });
+  });
+  box.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${z.name} ${electric ? "relay command" : "valve command and end switch"} over time">${body}
+    <line class="cross" y1="0" y2="${height}" stroke="var(--axis)" stroke-width="1" style="display:none"/>
+    <rect class="overlay" x="${left}" y="0" width="${width - left - right}" height="${height}" fill="transparent"/></svg><div class="tip"></div>`;
+  const svg = box.querySelector("svg");
+  const tip = box.querySelector(".tip");
+  const cross = svg.querySelector(".cross");
+  const overlay = svg.querySelector(".overlay");
+  overlay.addEventListener("mouseleave", () => { tip.style.display = "none"; cross.style.display = "none"; });
+  overlay.addEventListener("mousemove", (e) => {
+    const rect = svg.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (width / rect.width);
+    const i = Math.max(0, Math.min(n - 1, Math.floor((px - left) / cell)));
+    const c = ctl[i];
+    cross.setAttribute("x1", x(i) + cell / 2);
+    cross.setAttribute("x2", x(i) + cell / 2);
+    cross.style.display = "block";
+    const lines = z.outputs.map((o, k) => {
+      const suffix = many ? ` ${k + 1}` : "";
+      const open = (c * 10).toFixed(1);
+      const high = c > 0.005 ? `${((Math.min(1, c + 0.08) - 0.08) * 10).toFixed(1)} of 10 min high` : "low";
+      return `<div class="r">${z.name} ${electric ? "relay" : "valve"}${suffix}<b>${open} of 10 min on</b></div>${o.end ? `<div class="r">${z.name} end switch${suffix}<b>${high}</b></div>` : ""}`;
+    }).join("");
+    const boilerLine = electric ? "" : `<div class="r">Boiler<b>${((Math.min(1, boiler[i] + 0.08) - 0.08) * 10).toFixed(1)} of 10 min on</b></div>`;
+    tip.innerHTML = `<div class="t">${fmtTime(times[i])}</div>${lines}${boilerLine}`;
+    tip.style.display = "block";
+    const boxRect = box.getBoundingClientRect();
+    let leftPos = e.clientX - boxRect.left + 14;
+    if (leftPos + tip.offsetWidth > boxRect.width) leftPos = e.clientX - boxRect.left - tip.offsetWidth - 14;
+    tip.style.left = leftPos + "px";
+    tip.style.top = Math.max(0, e.clientY - boxRect.top - 20) + "px";
+  });
 }
 
 function sparkline(z, count) {
@@ -492,9 +562,9 @@ function renderTrends() {
         <div class="chart" id="temp-chart"></div>
       </div>
       <div class="card">
-        <h2>${z.name} control value</h2>
-        <div class="legend"><span><i class="sw" style="background:${color(z)}"></i>Control value, 0 off to 1 fully open</span></div>
+        <h2>${z.name} heating</h2>
         <div class="chart" id="ctl-chart"></div>
+        <div class="chart" id="state-chart" style="margin-top:12px"></div>
       </div>
     </div>`;
   const d = z.data;
@@ -503,6 +573,7 @@ function renderTrends() {
     const msg = `<div class="empty">No readings in this range.<br>${z.name} last reported ${z.staleDays} days ago.</div>`;
     document.getElementById("temp-chart").innerHTML = msg;
     document.getElementById("ctl-chart").innerHTML = msg;
+    document.getElementById("state-chart").innerHTML = "";
     return;
   }
   const times = d.times.slice(-n);
@@ -512,10 +583,11 @@ function renderTrends() {
   const all = temps.concat(targets.filter((v) => v !== null));
   const yMin = Math.floor(Math.min(...all) - 0.5), yMax = Math.ceil(Math.max(...all) + 0.5);
   if (trends.table) {
-    const rows = times.map((t, i) => ({ t, i })).filter(({ i }) => i % Math.max(1, Math.round(n / 24)) === 0).map(({ t, i }) => `<tr><td>${fmtTime(t)}</td><td class="num">${fmtTemp(temps[i])}</td><td class="num">${fmtTemp(targets[i])}</td><td class="num">${ctl[i].toFixed(2)}</td></tr>`).join("");
-    const table = `<table><thead><tr><th>Time</th><th class="num">Temperature °C</th><th class="num">Target °C</th><th class="num">Control</th></tr></thead><tbody>${rows}</tbody></table>`;
+    const rows = times.map((t, i) => ({ t, i })).filter(({ i }) => i % Math.max(1, Math.round(n / 24)) === 0).map(({ t, i }) => `<tr><td>${fmtTime(t)}</td><td class="num">${fmtTemp(temps[i])}</td><td class="num">${fmtTemp(targets[i])}</td><td class="num">${ctl[i].toFixed(2)}</td><td class="num">${(ctl[i] * 10).toFixed(1)}</td><td class="num">${z.outputs[0].end ? (ctl[i] > 0.005 ? "high" : "low") : "none"}</td></tr>`).join("");
+    const table = `<table><thead><tr><th>Time</th><th class="num">Temperature °C</th><th class="num">Target °C</th><th class="num">Control</th><th class="num">${z.system === "electric" ? "Relay on" : "Valve open"} min</th><th class="num">End switch</th></tr></thead><tbody>${rows}</tbody></table>`;
     document.getElementById("temp-chart").innerHTML = table;
-    document.getElementById("ctl-chart").innerHTML = `<div class="empty">The table to the left lists temperature, target and control value together.</div>`;
+    document.getElementById("ctl-chart").innerHTML = `<div class="empty">The table to the left lists temperature, target, control value and the first output together.</div>`;
+    document.getElementById("state-chart").innerHTML = "";
     return;
   }
   lineChart(document.getElementById("temp-chart"), {
@@ -528,9 +600,10 @@ function renderTrends() {
   });
   lineChart(document.getElementById("ctl-chart"), {
     label: `${z.name} control value`,
-    times, yMin: 0, yMax: 1, area: true, tickFmt: (t) => t.toFixed(1),
+    times, yMin: 0, yMax: 1, area: true, yLabel: "Control value", tickFmt: (t) => t.toFixed(1),
     series: [{ name: "Control value", color: color(z), values: ctl, area: true, endDot: true, fmt: (v) => v.toFixed(2) }],
   });
+  stateStrips(document.getElementById("state-chart"), z, times, ctl);
 }
 
 const LOGS = (() => {
