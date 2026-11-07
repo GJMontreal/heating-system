@@ -14,6 +14,7 @@ The same sensors, setpoints and control loop serve both. A zone belongs to one s
 | `boiler-relay` | Runs a PID loop per zone. Drives the hydronic GPIO outputs and the boiler, and the electric MQTT relay. Despite the name it controls both systems. |
 | `mqtt-bridge` | Copies sensor readings from the MQTT broker into redis. |
 | `hb-heating-plugin` | Homebridge plugin. The UI for setpoints, modes and boost. |
+| `heating-web` | Read-only API and web interface. Reads redis and is deployed on its own, apart from `boiler-relay`. |
 
 Redis connects all of them. Sensors publish to mosquitto, `mqtt-bridge` writes the readings to redis, Homebridge writes setpoints, and `boiler-relay` reads both and switches the relays.
 
@@ -38,7 +39,7 @@ flowchart LR
 
 The keys, payloads and who writes and reads each are in [docs/redis-contract.md](docs/redis-contract.md).
 
-`boiler-relay` and `mqtt-bridge` track `more_better_modular`. `hb-heating-plugin` tracks `develop`.
+`boiler-relay` and `mqtt-bridge` track `more_better_modular`. `hb-heating-plugin` tracks `develop`. `heating-web` tracks `main`.
 
 ## Clone
 
@@ -52,7 +53,7 @@ In an existing clone, run `git submodule update --init`.
 
 ```
 git submodule update --remote
-git add boiler-relay mqtt-bridge hb-heating-plugin
+git add boiler-relay mqtt-bridge hb-heating-plugin heating-web
 git commit -m "Update submodules"
 ```
 

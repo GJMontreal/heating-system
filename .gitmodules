@@ -10,3 +10,7 @@
 	path = hb-heating-plugin
 	url = git@github.com:GJMontreal/hb-heating-plugin.git
 	branch = develop
+[submodule "heating-web"]
+	path = heating-web
+	url = git@github.com:GJMontreal/heating-web.git
+	branch = main
