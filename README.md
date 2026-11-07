@@ -78,4 +78,18 @@ The script runs the `deploy.sh` of each part you name, so a part without one can
 
 The script creates the `heating` user on the device first. `boiler-relay` and `mqtt-bridge` install as separate `_v2` services beside the legacy ones and never touch the legacy directories. Their `deploy/switch.sh` moves between the legacy and v2 services. `heating-web` is new and has no legacy twin, so it has no switch. It also reads the control config, so deploy `boiler-relay` first. A deploy copies files and builds the virtualenv. It does not install or start the units. Each part prints the commands to install them. Because `heating-web` has its own unit and directory, it redeploys and restarts without touching the control service.
 
+## Device setup
+
+The deploy scripts do not set up the storage or the logging. Do these once on the device, as root.
+
+The root filesystem is a 3.6 GB eMMC. History and the journal go on an SD card so the control software never writes them to the eMMC.
+
+1. Format the card as ext4 with the label `heating-history`: `mkfs.ext4 -L heating-history /dev/mmcblk0p1`. Check the device name with `lsblk` first, because this erases the card.
+2. Mount it at `/var/lib/heating_history` by UUID with `defaults,noatime,commit=60,nofail,x-systemd.device-timeout=5`, and create `data` there owned by `heating`. `heating-web` writes `data/history.sqlite3` only while the path is a mount point.
+3. Create `/var/lib/heating_history/journal` as `root:systemd-journal` with mode `2755`, and bind mount it onto `/var/log/journal` in `/etc/fstab` with `bind,nofail,x-systemd.requires-mounts-for=/var/lib/heating_history`.
+4. Add `/etc/systemd/journald.conf.d/heating.conf` with `Storage=persistent` and `SystemMaxUse=200M`. Keep the cap small, because without the card journald writes to the eMMC.
+5. Disable rsyslog with `systemctl disable --now rsyslog`. It duplicated every journal line into `daemon.log` and `syslog`, which reached 184 MB.
+
+Order matters in step 4. Copy any existing journal files to the card and remove them from `/var/log/journal` before you mount the bind, or the mount hides them. Then run `chgrp -R systemd-journal /var/lib/heating_history/journal` and `systemd-tmpfiles --create --prefix /var/log/journal`. Journal files copied with `cp -a` stay `root:root`, and `heating-web` cannot read them as `systemd-journal`. Restarting `systemd-journald` disconnects the output of services already running. They stay healthy but log nothing to the journal until they restart.
+
 Each submodule has its own README with setup, running and deploy steps.
