@@ -16,11 +16,11 @@ The same sensors, setpoints and control loop serve both. A zone belongs to one s
 | `hb-heating-plugin` | Homebridge plugin. The UI for setpoints, modes and boost. |
 | `heating-web` | Read-only API and web interface. Reads redis and is deployed on its own, apart from `boiler-relay`. |
 
-Redis connects all of them. Sensors publish to mosquitto, `mqtt-bridge` writes the readings to redis, Homebridge writes setpoints, and `boiler-relay` reads both and switches the relays.
+Redis connects all of them. Sensors publish to mosquitto, `mqtt-bridge` writes the readings to redis, Homebridge writes setpoints, and `boiler-relay` reads both and switches the relays. `heating-web` only reads redis and the systemd journal, and serves the API and the web interface. Dotted lines are the version keys each service writes at startup.
 
 ```mermaid
 flowchart LR
-    sensors[Zigbee sensors via Tasmota gateway] -->|publish| mqtt[(mosquitto)]
+    sensors[Zigbee sensors<br/>via Tasmota gateway] -->|publish| mqtt[(mosquitto)]
     mqtt -->|subscribe| bridge[mqtt-bridge]
     bridge -->|current_temperature<br/>humidity, battery| redis[(redis)]
 
@@ -29,12 +29,20 @@ flowchart LR
     redis -->|current_temperature, humidity<br/>battery level, heating_cooling_state| hb
 
     redis -->|current_temperature<br/>target, boost| relay[boiler-relay]
-    relay -->|control_value<br/>heating_cooling_state| redis
+    relay -->|control_value, heating_cooling_state<br/>heating/mode/ zones, boiler, heartbeat| redis
 
     relay -->|GPIO, hydronic| relays[Relay board<br/>zone valves, boiler, pump]
     relays -->|end switches| relay
     relay -->|MQTT relay output, electric| mqtt
     mqtt -->|command, no feedback| zrelay[Zigbee relay<br/>electric radiator]
+
+    browser[Browser] <--> web[heating-web<br/>API and web UI]
+    redis -->|sensor, target, status<br/>and version keys| web
+    journal[systemd units<br/>and journal] -->|state, logs| web
+
+    bridge -.->|version| redis
+    relay -.->|version| redis
+    web -.->|version| redis
 ```
 
 The keys, payloads and who writes and reads each are in [docs/redis-contract.md](docs/redis-contract.md).
@@ -60,12 +68,13 @@ git commit -m "Update submodules"
 ## Deploy
 
 ```
+./deploy.sh <user> <host> heating-web
 ./deploy.sh <user> <host> boiler-relay mqtt-bridge
 ./deploy.sh <user> <host> all
 ```
 
 The script runs the `deploy.sh` of each part you name, so a part without one cannot be deployed. A part that fails does not stop the others, and the script exits non-zero if any failed.
 
-The script creates the `heating` user on the device first. Each part installs as a separate `_v2` service beside the legacy one and never touches the legacy directory. A deploy copies files and builds the virtualenv. It does not install or start the units. Each part prints the commands to install them, and its `deploy/switch.sh` moves between the legacy and v2 services.
+The script creates the `heating` user on the device first. `boiler-relay` and `mqtt-bridge` install as separate `_v2` services beside the legacy ones and never touch the legacy directories. Their `deploy/switch.sh` moves between the legacy and v2 services. `heating-web` is new and has no legacy twin, so it has no switch. It also reads the control config, so deploy `boiler-relay` first. A deploy copies files and builds the virtualenv. It does not install or start the units. Each part prints the commands to install them. Because `heating-web` has its own unit and directory, it redeploys and restarts without touching the control service.
 
 Each submodule has its own README with setup, running and deploy steps.

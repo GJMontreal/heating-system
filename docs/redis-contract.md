@@ -36,7 +36,7 @@ The status keys in the second table do not start with a sensor path. They start 
 
 | Key | Payload | Writer | Readers |
 | --- | --- | --- | --- |
-| `heating/<mode>/zones/<zone name>` | `{"system", "control_value", "state", "time"}`, `system` is `hydronic` or `electric`, `state` is 0, 1 or null | the zone thread | `boiler-relay` API |
+| `heating/<mode>/zones/<zone name>` | `{"system", "control_value", "state", "time"}`, `system` is `hydronic` or `electric`, `state` is 0, 1 or null | the zone thread | `heating-web` |
 | `heating/<mode>/hydronic/boiler` | `{"call", "time"}`, `call` is 0 or 1 | the boiler thread, once per poll | none |
 | `heating/<mode>/heartbeat` | `{"time"}` | the boiler thread, once per poll | none |
 
@@ -48,8 +48,9 @@ Each service writes its version once at startup. Delivery is SET only. Every key
 
 | Key | Writer | Readers |
 | --- | --- | --- |
-| `heating/versions/boiler-relay` | `boiler-relay`, in active and shadow mode | none |
-| `heating/versions/mqtt-bridge` | `mqtt-bridge`, after its redis ping succeeds | none |
+| `heating/versions/boiler-relay` | `boiler-relay`, in active and shadow mode | `heating-web` |
+| `heating/versions/mqtt-bridge` | `mqtt-bridge`, after its redis ping succeeds | `heating-web` |
+| `heating/versions/heating-web` | `heating-web`, once at startup | `heating-web` |
 
 ## Rules
 
@@ -61,5 +62,5 @@ Each service writes its version once at startup. Delivery is SET only. Every key
 
 - The plugin reads no `current_temperature` at startup, only subscribes. After a plugin restart the temperature is empty until the next sensor report.
 - `current_battery_voltage` and `control_value` have no reader.
-- The API reads only the zone keys. `hydronic/boiler` and `heartbeat` have no reader yet.
+- `heating-web` reads only the zone keys of the status keys. `hydronic/boiler` and `heartbeat` have no reader yet.
 - Nothing checks this table against the code. A contract test that reads each repo's key names would catch a rename.

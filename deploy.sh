@@ -38,7 +38,7 @@ export SERVICE_USER="${SERVICE_USER:-heating}"
 
 echo "== ensuring service user ${SERVICE_USER}"
 ssh "${REMOTE_USER}@${REMOTE_HOST}" \
-    "id ${SERVICE_USER} >/dev/null 2>&1 || sudo useradd --system --no-create-home --shell /usr/sbin/nologin ${SERVICE_USER}; sudo usermod -aG gpio ${SERVICE_USER}" \
+    "id ${SERVICE_USER} >/dev/null 2>&1 || sudo useradd --system --no-create-home --shell /usr/sbin/nologin ${SERVICE_USER}; sudo usermod -aG gpio,systemd-journal ${SERVICE_USER}" \
     || exit 1
 
 FAILED=()
