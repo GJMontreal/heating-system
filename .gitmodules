@@ -1,0 +1,8 @@
+[submodule "boiler-relay"]
+	path = boiler-relay
+	url = git@github.com:GJMontreal/boiler-relay.git
+	branch = more_better_modular
+[submodule "mqtt-bridge"]
+	path = mqtt-bridge
+	url = git@github.com:GJMontreal/mqtt-bridge.git
+	branch = more_better_modular
