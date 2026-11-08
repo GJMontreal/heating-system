@@ -85,7 +85,7 @@ The deploy scripts do not set up the storage or the logging. Do these once on th
 The root filesystem is a 3.6 GB eMMC. History and the journal go on an SD card so the control software never writes them to the eMMC.
 
 1. Format the card as ext4 with the label `heating-history`: `mkfs.ext4 -L heating-history /dev/mmcblk0p1`. Check the device name with `lsblk` first, because this erases the card.
-2. Mount it at `/var/lib/heating_history` by UUID with `defaults,noatime,commit=60,nofail,x-systemd.device-timeout=5`, and create `data` there owned by `heating`. `heating-web` writes `data/history.sqlite3` only while the path is a mount point.
+2. Mount it at `/var/lib/heating_history` by UUID with `defaults,noatime,commit=60,nofail,x-systemd.device-timeout=30`, and create `data` there owned by `heating`. A timeout of 5 seconds failed at boot, because the card's device node was not ready yet. `heating-web` writes `data/history.sqlite3` only while the path is a mount point.
 3. Create `/var/lib/heating_history/journal` as `root:systemd-journal` with mode `2755`, and bind mount it onto `/var/log/journal` in `/etc/fstab` with `bind,nofail,x-systemd.requires-mounts-for=/var/lib/heating_history`.
 4. Add `/etc/systemd/journald.conf.d/heating.conf` with `Storage=persistent` and `SystemMaxUse=200M`. Keep the cap small, because without the card journald writes to the eMMC.
 5. Disable rsyslog with `systemctl disable --now rsyslog`. It duplicated every journal line into `daemon.log` and `syslog`, which reached 184 MB.
