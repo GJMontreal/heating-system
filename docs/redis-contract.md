@@ -36,11 +36,11 @@ The status keys in the second table do not start with a sensor path. They start 
 
 | Key | Payload | Writer | Readers |
 | --- | --- | --- | --- |
-| `heating/<mode>/zones/<zone name>` | `{"system", "control_value", "state", "time"}`, `system` is `hydronic` or `electric`, `state` is 0, 1 or null | the zone thread | `heating-web` |
+| `heating/<mode>/zones/<zone name>` | `{"system", "control_value", "state", "pid", "time"}`, `system` is `hydronic` or `electric`, `state` is 0, 1 or null, `pid` is `{"kp", "ki", "kd", "integral_cap"}` | the zone thread | `heating-web` |
 | `heating/<mode>/hydronic/boiler` | `{"call", "time"}`, `call` is 0 or 1 | the boiler thread, once per poll | none |
 | `heating/<mode>/heartbeat` | `{"time"}` | the boiler thread, once per poll | none |
 
-`<zone name>` is the zone `name` in `system_config.json`, not the sensor path. `state` is null until the zone has a target state. In shadow mode `call` comes from the zones' decided states, not from the end-switch pins. The boiler key sits under `hydronic` because the electric system has no boiler.
+`<zone name>` is the zone `name` in `system_config.json`, not the sensor path. `state` is null until the zone has a target state. `pid` holds the gains that zone's controller runs and is written every tick, including before the zone has a target state. The shadow may run a different profile from the active service, set by the `shadow` section of the config. The legacy controller publishes no status keys, so a reader treats legacy as the defaults 1, 0.01, 0.5 and a cap of 1.0. In shadow mode `call` comes from the zones' decided states, not from the end-switch pins. The boiler key sits under `hydronic` because the electric system has no boiler.
 
 ## Version keys
 
