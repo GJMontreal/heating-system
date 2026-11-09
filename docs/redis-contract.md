@@ -24,11 +24,11 @@ The status keys in the second table do not start with a sensor path. They start 
 | `current_battery_voltage` | JSON `{"value", "units", "time"}`, `units` is `V` | `mqtt-bridge` | SET+PUB | none |
 | `target_temperature` | JSON `{"value", "units"}`, `units` is `C` | plugin | SET+PUB | `boiler-relay` GET, plugin GET at startup |
 | `target_heatingcooling_state` | integer, 0 off, 1 heat | plugin | SET+PUB | `boiler-relay` GET, plugin GET at startup |
-| `boost` | `true` or `false` | plugin | SET | `boiler-relay` GET |
+| `boost` | `true` or `false` | plugin | SET, with an expiry while `true` | `boiler-relay` GET |
 | `control_value` | float from 0 to 1 | `boiler-relay` | SET | none |
 | `heating_cooling_state` | integer, 0 or 1 | `boiler-relay` | SET+PUB | plugin PUB, plugin GET at startup |
 
-`time` is UTC ISO 8601 to the second with a `Z` suffix. `boiler-relay` treats a `current_temperature` whose `time` has not changed for two hours as no heat. `boiler-relay` treats any `target_heatingcooling_state` other than 1 as off.
+`time` is UTC ISO 8601 to the second with a `Z` suffix. `boiler-relay` treats a `current_temperature` whose `time` has not changed for two hours as no heat. `boiler-relay` treats any `target_heatingcooling_state` other than 1 as off. The plugin ends a boost after its `boostMinutes` setting, 60 by default, by writing `false`, and it sets `true` with an expiry 60 seconds longer as a safety net. `boiler-relay` reads a missing `boost` key as no boost.
 
 ## Status keys
 
