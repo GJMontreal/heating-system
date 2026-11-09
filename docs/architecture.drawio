@@ -1,0 +1,85 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="heating-system" name="heating-system">
+    <mxGraphModel dx="1260" dy="878" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="sensors" value="Zigbee sensors&lt;br&gt;via Tasmota gateway" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="zrelay" value="Zigbee relay&lt;br&gt;electric radiator" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="mqtt" value="mosquitto" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;" vertex="1" parent="1">
+          <mxGeometry x="260" y="120" width="120" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="bridge" value="mqtt-bridge" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="40" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="relay" value="boiler-relay" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="200" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="relays" value="Relay board&lt;br&gt;zone valves, boiler, pump" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="340" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="redis" value="redis" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;" vertex="1" parent="1">
+          <mxGeometry x="700" y="150" width="120" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="hb" value="hb-heating-plugin&lt;br&gt;Homebridge" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="710" y="345" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="app" value="Home app" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="940" y="345" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="web" value="heating-web&lt;br&gt;API and web UI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="940" y="150" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="journal" value="systemd units&lt;br&gt;and journal" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="940" y="40" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="browser" value="Browser" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="150" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="sensors" target="mqtt">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="mqtt" target="bridge">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;exitX=1;exitY=0.3;entryX=0.3;entryY=0;" edge="1" parent="1" source="bridge" target="redis">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;startArrow=block;endArrow=block;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="zrelay" target="mqtt">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="MQTT" style="edgeStyle=orthogonalEdgeStyle;html=1;startArrow=block;endArrow=block;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="relay" target="mqtt">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;startArrow=block;endArrow=block;exitX=1;exitY=0.7;entryX=0;entryY=0.7;" edge="1" parent="1" source="relay" target="redis">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="GPIO" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;exitX=0.3;exitY=1;entryX=0.3;entryY=0;" edge="1" parent="1" source="relay" target="relays">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="end switches" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;exitX=0.7;exitY=0;entryX=0.7;entryY=1;" edge="1" parent="1" source="relays" target="relay">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;html=1;startArrow=block;endArrow=block;exitX=0.25;exitY=0;entryX=0.42;entryY=1;" edge="1" parent="1" source="hb" target="redis">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;html=1;startArrow=block;endArrow=block;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="app" target="hb">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;html=1;startArrow=block;endArrow=block;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="redis" target="web">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="journal" target="web">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;html=1;startArrow=block;endArrow=block;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="browser" target="web">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -3,7 +3,7 @@
 Control software for a house with two heating systems. A BeagleBone runs it all.
 
 - **Hydronic:** a boiler and pump feed radiators through zone valves. The BeagleBone switches them with GPIO relays. Each valve reports back through an end switch, and the boiler runs while any end switch is high.
-- **Electric:** a radiator on a Zigbee relay, switched over MQTT. It has no end switch and no other feedback, so its state is never confirmed.
+- **Electric:** a radiator on a Zigbee relay, switched over MQTT. It has no end switch. The relay reports its own power state over MQTT, and `boiler-relay` uses that report to confirm each command.
 
 The same sensors, setpoints and control loop serve both. A zone belongs to one system, set by its `system` field in the `boiler-relay` config.
 
@@ -16,35 +16,11 @@ The same sensors, setpoints and control loop serve both. A zone belongs to one s
 | `hb-heating-plugin` | Homebridge plugin. The UI for setpoints, modes and boost. |
 | `heating-web` | Read-only API and web interface. Reads redis and is deployed on its own, apart from `boiler-relay`. |
 
-Redis connects all of them. Sensors publish to mosquitto, `mqtt-bridge` writes the readings to redis, Homebridge writes setpoints, and `boiler-relay` reads both and switches the relays. `heating-web` only reads redis and the systemd journal, and serves the API and the web interface. Dotted lines are the version keys each service writes at startup.
+Redis connects all of them. Sensors publish to mosquitto, `mqtt-bridge` writes the readings to redis, Homebridge writes setpoints, and `boiler-relay` reads both and switches the relays. `heating-web` only reads redis and the systemd journal, and serves the API and the web interface.
 
-```mermaid
-flowchart LR
-    sensors[Zigbee sensors<br/>via Tasmota gateway] -->|publish| mqtt[(mosquitto)]
-    mqtt -->|subscribe| bridge[mqtt-bridge]
-    bridge -->|current_temperature<br/>humidity, battery| redis[(redis)]
+![Architecture](docs/architecture.drawio.svg)
 
-    app[Home app] <--> hb[hb-heating-plugin<br/>Homebridge]
-    hb -->|target_temperature<br/>target state, boost| redis
-    redis -->|current_temperature, humidity<br/>battery level, heating_cooling_state| hb
-
-    redis -->|current_temperature<br/>target, boost| relay[boiler-relay]
-    relay -->|control_value, heating_cooling_state<br/>heating/mode/ zones, boiler, heartbeat| redis
-
-    relay -->|GPIO, hydronic| relays[Relay board<br/>zone valves, boiler, pump]
-    relays -->|end switches| relay
-    relay -->|MQTT relay output, electric| mqtt
-    mqtt -->|command, no feedback| zrelay[Zigbee relay<br/>electric radiator]
-
-    browser[Browser] <--> web[heating-web<br/>API and web UI]
-    redis -->|sensor, target, status<br/>and version keys| web
-    journal[systemd units<br/>and journal] -->|state, logs| web
-
-    bridge -.->|version| redis
-    relay -.->|version| redis
-    web -.->|version| redis
-    hb -.->|version| redis
-```
+The diagram source is `docs/architecture.drawio.svg`. Open it in draw.io to edit it.
 
 The keys, payloads and who writes and reads each are in [docs/redis-contract.md](docs/redis-contract.md).
 
