@@ -17,10 +17,10 @@ Work that spans more than one service. Each service keeps its own `TODO.md` for 
 - [ ] Replace the BackRoom end switch. Until then a BackRoom call can leave `P8_27` high and keep the boiler on with no demand. Do not boost or heat BackRoom.
 - [ ] Deploy the boost timer. `hb-heating-plugin` `2b5abff` on `develop` ends a boost after `boostMinutes`, 60 by default, with a per thermostat override in the Homebridge UI. The plugin has no deploy step yet, so the timer has not run on the device.
 - [ ] Add a HomeKit service that shows the boost time remaining. Boost stays a Switch for now.
-- [ ] Find out why `tele/tasmota_E3738F/LWT` holds a retained `Offline` while the Stairwell relay works.
 
 ## Done
 
+- [x] Explain and clear the retained `Offline` on `tele/tasmota_E3738F/LWT` and `tele/zigbee_bridge/LWT`. The gateway publishes its `Online` and will messages without the retain flag, so an old retained `Offline` from an earlier setup was never overwritten. A restart of the gateway on 2026-11-14 showed `Offline` then `Online`, both non-retained. Both retained messages were cleared the same day. A reader that wants the gateway state must watch the live messages, because the topic holds nothing for a new subscriber.
 - [x] Move live control from the legacy `boiler_relay` to `boiler_relay_v2` on 2026-11-08. The legacy unit is installed and disabled, and `boiler_relay_v2_shadow` runs beside `v2` and starts at boot.
 - [x] Add a minimum valve on time of 5 minutes and off time of 13 minutes to the hydronic zones, in `boiler-relay` v0.8.1. A short demand accumulates and releases as one call. A restart or a power cut starts with both minimums satisfied, and an outage counts as time closed. It is live on the device from 2026-11-14.
 - [x] Record each real temperature report in a `readings` table and draw the Trends curve from it, in `heating-web` v0.13.0. The device migrated the history on 2026-11-14.
